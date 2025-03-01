@@ -73,10 +73,12 @@ def lcd1602Display():
     import utime as time
     
     # Initialize I2C communication;
+    print("Initialize I2C communication ...")
     i2c = I2C(1, sda=Pin(6), scl=Pin(7), freq=400000)
 
     # Create an LCD object for interfacing with the LCD1602 display
-    lcd = LCD(i2c)
+    print("Create an LCD object for interfacing with the LCD1602 display ...")
+    lcd = LCD(i2c, 0x29)
 
     # Display the first message on the LCD
     # Use '\n' to create a new line.
@@ -95,6 +97,36 @@ def lcd1602Display():
     # Clear the display before exiting
     lcd.clear()
 
+def lcd1602Display2():
+    from lcd1602topteckboy import LCD
+    from machine import I2C
+    import utime as time
+    
+    upper = ['Juja', "Weitethie"]
+    up = f"Current:{upper[0]} Next:{upper[1]} "
+    
+    stages = ["Allsops", "Juja", "Thika", "Weitethie", "Muthaiga", "Ruiru", "K-Roard", "KU", "Garden city", "Roysambu", "BuPass"]
+    do = ", ".join(stages) + " "  # Adding space for smooth scrolling
+    
+    lcd = LCD()
+    lcd.clear()
+    
+    up_index = 0
+    do_index = 0
+    up_length = len(up)
+    do_length = len(do)
+
+    while True:
+        # Scroll first row
+        lcd.write(0, 0, up[up_index:up_index + 16])  # Display 16 chars at a time
+        up_index = (up_index + 1) % up_length  # Loop back when reaching the end
+        
+        # Scroll second row
+        lcd.write(0, 1, do[do_index:do_index + 16])
+        do_index = (do_index + 1) % do_length
+        
+        time.sleep(0.3)  # Adjust speed for smoother effect
+
 if(__name__ == "__main__"):
     print("Starting ...")
-    lcd1602Display()
+    lcd1602Display2()
