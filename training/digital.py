@@ -4,7 +4,7 @@ import utime as time # time implementation for micropython
 
 
 def readDHT11():
-    from  import dht11_impl
+    import dht11_impl
     while True:
         time.sleep(5)
         pin = Pin(28, Pin.OUT, Pin.PULL_DOWN)
@@ -71,15 +71,29 @@ def lcd1602Display():
     from lcd1602 import LCD
     import time
     import utime as time
-    lcd=LCD()
-    while True:
-        
-        myName=input('What is Your Name? ')
-        lcd.clear()
-        greeting1='Hello '+myName
-        greeting2='Welcome to My Pi'
-        lcd.write(0,0,greeting1)
-        lcd.write(0,1,greeting2)
+    
+    # Initialize I2C communication;
+    i2c = I2C(1, sda=Pin(6), scl=Pin(7), freq=400000)
+
+    # Create an LCD object for interfacing with the LCD1602 display
+    lcd = LCD(i2c)
+
+    # Display the first message on the LCD
+    # Use '\n' to create a new line.
+    string = "SunFounder\n    LCD Tutorial"
+    lcd.message(string)
+    # Wait for 2 seconds
+    time.sleep(2)
+    # Clear the display
+    lcd.clear()
+
+    # Display the second message on the LCD
+    string = "Hello\n  World!"
+    lcd.message(string)
+    # Wait for 5 seconds
+    time.sleep(5)
+    # Clear the display before exiting
+    lcd.clear()
 
 if(__name__ == "__main__"):
     print("Starting ...")
