@@ -72,16 +72,53 @@ def pub_loop(c:MQTTClient, topic:bytes = b"topic"):
         print("Error occured: ", e)
 
 
+def getRoute(serverAddress:str="localhost"):
+    import urequests as requests
+    import ujson as json
+    url = f"http://{serverAddress}:5000/api/route/eee142f0-97bc-4bed-a257-4d9613327555?v=custom:include(stages:include(stage))"
+    response = requests.get(url)
+    data = json.loads(response.text)
+    return data
+
+def publishRoute(c:MQTTClient, topic:bytes = b"topic", serverAddress:str="localhost", clientId:bytes=b"umqtt_client"):
+    import ujson as json
+    try:
+        print("Getting route data ...")
+        data = getRoute(serverAddress)
+        print("Route data fetched")
+        c.connect()
+        print("Connected to %s " % c.server, " , initiating publish")
+        while True:
+            for routestage in data["stages"]:
+                stage = routestage["stage"]
+                payload = json.dumps({"fleetNo": clientId, "latitude": float(stage["latitude"]), "longitude": float(stage["longitude"])})
+                c.publish(topic, payload.encode())
+                print(f"Published: {payload} for {clientId}-{stage['name']}")
+                time.sleep_ms(2000)
+
+            time.sleep_ms(2000)
+        c.disconnect()
+    except Exception as e:
+        c.disconnect()
+        print("Error occured: ", e)
+
+
 def main(serverAddress:str="localhost", clientId: bytes=b"umqtt_client"):
+
     c = MQTTClient(client_id=clientId, server=serverAddress)
-    topic = b"OMOSH"
-    sub_loop(c,topic)
+    topic = b"sensors/gps"
+    # sub_loop(c,topic)
+    publishRoute(c, topic, serverAddress=serverAddress, clientId=clientId)
+    
+
 
 
 
 
 if __name__ == "__main__":
-    connectToNetwork(ssid="Omosh", password="password")
-    CLIENT_ID = binascii.hexlify(machine.unique_id())
-    SERVER = "192.168.1.102"
-    main(serverAddress=SERVER, clientId=CLIENT_ID, )
+    connectToNetwork(ssid="SSID", password="PASSWORD")
+    CLIENT_ID = "SM-002".encode()
+    # CLIENT_ID = binascii.hexlify(machine.unique_id())
+    # SERVER = "mqtt://test.mosquitto.org"
+    SERVER = "192.168.1.100"
+    main(serverAddress=SERVER, clientId=CLIENT_ID)
