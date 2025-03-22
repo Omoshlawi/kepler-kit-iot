@@ -88,8 +88,9 @@ def publishRoute(c:MQTTClient, topic:bytes = b"topic", serverAddress:str="localh
         print("Route data fetched")
         c.connect()
         print("Connected to %s " % c.server, " , initiating publish")
+        routeStages = sorted(list(data["stages"]), key=lambda x: x["order"])
         while True:
-            for routestage in data["stages"]:
+            for routestage in routeStages:
                 stage = routestage["stage"]
                 payload = json.dumps({"fleetNo": clientId, "latitude": float(stage["latitude"]), "longitude": float(stage["longitude"])})
                 c.publish(topic, payload.encode())
@@ -116,7 +117,7 @@ def main(serverAddress:str="localhost", clientId: bytes=b"umqtt_client"):
 
 
 if __name__ == "__main__":
-    connectToNetwork(ssid="SSID", password="PASSWORD")
+    connectToNetwork(ssid="ssid", password="pwd")
     CLIENT_ID = "SM-002".encode()
     # CLIENT_ID = binascii.hexlify(machine.unique_id())
     # SERVER = "mqtt://test.mosquitto.org"
