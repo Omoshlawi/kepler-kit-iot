@@ -95,9 +95,9 @@ def publishRoute(c:MQTTClient, topic:bytes = b"topic", serverAddress:str="localh
                 payload = json.dumps({"fleetNo": clientId, "latitude": float(stage["latitude"]), "longitude": float(stage["longitude"])})
                 c.publish(topic, payload.encode())
                 print(f"Published: {payload} for {clientId}-{stage['name']}")
-                time.sleep_ms(2000)
-
+                time.sleep_ms(60000)
             time.sleep_ms(2000)
+            routeStages.reverse()
         c.disconnect()
     except Exception as e:
         c.disconnect()
