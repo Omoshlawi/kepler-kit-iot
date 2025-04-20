@@ -141,7 +141,7 @@ class GPSModule:
                 longitude=fields[5],
                 lon_direction=fields[6],
                 speed_knots=fields[7],
-                true_course=fields[8],
+                true_course=fields[8] if len(fields) > 8 else None,  # Bearing
                 date=fields[9],
                 magnetic_variation=fields[10] if len(fields) > 10 else '',
                 variation_direction=fields[11] if len(fields) > 11 else '',
@@ -154,9 +154,9 @@ class GPSModule:
         """Parse VTG (Course Over Ground and Ground Speed) sentence."""
         try:
             return GPVTG(
-                true_track=fields[1],
+                true_track=fields[1] if len(fields) > 1 else None,  # True bearing
                 t=fields[2],
-                magnetic_track=fields[3],
+                magnetic_track=fields[3] if len(fields) > 3 else None,  # Magnetic bearing
                 m=fields[4],
                 speed_knots=fields[5],
                 n=fields[6],
@@ -202,6 +202,13 @@ class GPSModule:
         """Get the latest location data from RMC or GGA sentences."""
         rmc = self.last_valid_data['RMC']
         gga = self.last_valid_data['GGA']
+        vtg = self.last_valid_data['VTG']
+        # Prefer VTG direction if available, fall back to RMC
+        direction = None
+        if vtg and vtg.true_track:
+            direction = vtg.true_track
+        elif rmc and rmc.true_course:
+            direction = rmc.true_course
         
         if rmc and rmc.status == 'A':  # 'A' = Active, 'V' = Void  Prefer RMC if active
             return {
@@ -209,14 +216,16 @@ class GPSModule:
                 'longitude': self._convert_to_decimal(rmc.longitude, rmc.lon_direction),
                 'timestamp': rmc.timestamp,
                 'date': rmc.date,
-                'speed': rmc.speed_knots
+                'speed': rmc.speed_knots,
+                'direction_degrees': direction
             }
         elif gga and gga.fix_quality != '0':  # 0 = invalid fix Fallback to GGA
             return {
                 'latitude': self._convert_to_decimal(gga.latitude, gga.lat_direction),
                 'longitude': self._convert_to_decimal(gga.longitude, gga.lon_direction),
                 'timestamp': gga.timestamp,
-                'altitude': gga.altitude
+                'altitude': gga.altitude,
+                'direction_degrees': direction
             }
         return None
     
